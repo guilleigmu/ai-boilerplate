@@ -1,0 +1,72 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm:*)",
+      "Bash(mkdir:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(mv:*)",
+      "Bash(grep:*)",
+      "Bash(npm:*)",
+      "Bash(ls:*)",
+      "Bash(cp:*)",
+      "Write",
+      "Edit",
+      "mcp__ide__getDiagnostics",
+      "mcp__context7",
+      "mcp__playwright",
+      "mcp__shadcn",
+      "mcp__next-devtools"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Write(.env)",
+      "Bash(rm -rf:*)",
+      "Bash(pnpm db:push:prod)"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "shadcn",
+    "context7",
+    "playwright",
+    "next-devtools"
+  ],
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "say 'Agente finalizado'",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/on-notification-say.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm format $FILE_PATH",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
