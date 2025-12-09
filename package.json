@@ -13,7 +13,7 @@
     "db:clear": "tsx src/db/clear.ts",
     "db:seed": "tsx src/db/seed.ts",
     "db:studio": "drizzle-kit studio",
-    "db:setup": "docker-compose --env-file /dev/null up -d && pnpm db:push && pnpm db:seed",
+    "db:setup": "docker-compose --env-file /dev/null up -d && pnpm db:push --force && pnpm db:seed",
     "db:reset": "pnpm db:clear && pnpm db:push --force && pnpm db:seed",
     "db:push:prod": "./scripts/db-push-prod.sh"
   },
