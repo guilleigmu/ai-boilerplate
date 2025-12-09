@@ -181,6 +181,606 @@ mcp__next-devtools__nextjs_call({
 - Caching and revalidation
 - Middleware (proxy.ts)
 
+---
+
+## Next.js App Router Deep Dive
+
+This section covers professional Next.js patterns you MUST follow. When in doubt, use `mcp__next-devtools__nextjs_docs` to get the latest documentation.
+
+### Server Components vs Client Components
+
+**Server Components (Default)** - Components WITHOUT "use client" directive:
+- Render on the server, send HTML to client
+- Can directly access databases, environment variables, secrets
+- Cannot use React hooks (useState, useEffect, etc.)
+- Cannot use browser APIs (window, localStorage, etc.)
+- Cannot use event handlers (onClick, onChange, etc.)
+- Reduce JavaScript bundle size
+
+**Client Components** - Components WITH "use client" directive:
+- Render in the browser (hydrated)
+- Can use React hooks and browser APIs
+- Can handle user interactions
+- Should be used sparingly and kept small
+
+```typescript
+// ✅ Server Component (default) - NO directive needed
+// src/app/admin/products/page.tsx
+import { getProducts } from "@/data-access/products";
+import { ProductTable } from "./product-table";
+
+export default async function ProductsPage() {
+  // Direct database access - only possible in Server Components
+  const products = await getProducts();
+
+  return (
+    <div>
+      <h1>Products</h1>
+      {/* Pass data to Client Component */}
+      <ProductTable products={products} />
+    </div>
+  );
+}
+```
+
+```typescript
+// ✅ Client Component - "use client" at the TOP
+// src/app/admin/products/product-table.tsx
+"use client";
+
+import { useState } from "react";
+import type { Product } from "@/db/schema";
+
+interface ProductTableProps {
+  products: Product[];
+}
+
+export function ProductTable({ products }: ProductTableProps) {
+  const [selected, setSelected] = useState<number[]>([]);
+
+  // Can use hooks and event handlers here
+  return (
+    <table>
+      {/* Interactive table with selection */}
+    </table>
+  );
+}
+```
+
+### Component Composition Pattern
+
+**Keep Server Components at the top, Client Components at the leaves:**
+
+```typescript
+// ✅ GOOD: Server Component wraps Client Component
+// src/app/admin/dashboard/page.tsx (Server Component)
+import { getStats } from "@/data-access/stats";
+import { StatsCards } from "./stats-cards";      // Server Component
+import { InteractiveChart } from "./chart";      // Client Component
+
+export default async function DashboardPage() {
+  const stats = await getStats();
+
+  return (
+    <div>
+      <StatsCards stats={stats} />           {/* Server-rendered */}
+      <InteractiveChart data={stats.chart} /> {/* Client-side interactivity */}
+    </div>
+  );
+}
+```
+
+```typescript
+// ✅ Pass Server Components as children to Client Components
+// src/app/admin/layout.tsx (Server Component)
+import { Sidebar } from "./sidebar";           // Client Component (interactive)
+import { Navigation } from "./navigation";     // Server Component
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex">
+      <Sidebar>
+        <Navigation />  {/* Server Component passed as children */}
+      </Sidebar>
+      <main>{children}</main>
+    </div>
+  );
+}
+```
+
+### Server Actions (Data Mutations)
+
+**Server Actions** are async functions that run on the server. Use them for ALL data mutations.
+
+```typescript
+// src/app/admin/products/actions.ts
+"use server";
+
+import { revalidatePath, revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
+import { createProduct, updateProduct, deleteProduct } from "@/data-access/products";
+import { createProductSchema } from "@/lib/validations/product";
+
+// ✅ Form action with FormData
+export async function createProductAction(formData: FormData) {
+  const rawData = {
+    name: formData.get("name") as string,
+    price: formData.get("price") as string,
+    categoryId: formData.get("categoryId") as string,
+  };
+
+  // Always validate input
+  const result = createProductSchema.safeParse(rawData);
+  if (!result.success) {
+    return { error: result.error.issues[0].message };
+  }
+
+  try {
+    const product = await createProduct(result.data);
+
+    // Revalidate the products list page
+    revalidatePath("/admin/products");
+
+    // Optionally redirect to the new product
+    redirect(`/admin/products/${product.id}`);
+  } catch (error) {
+    return { error: "Failed to create product" };
+  }
+}
+
+// ✅ Action with arguments (not just FormData)
+export async function updateProductAction(
+  id: number,
+  data: { name?: string; price?: number }
+) {
+  try {
+    await updateProduct(id, data);
+    revalidatePath("/admin/products");
+    revalidatePath(`/admin/products/${id}`);
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to update product" };
+  }
+}
+
+// ✅ Simple delete action
+export async function deleteProductAction(id: number) {
+  try {
+    await deleteProduct(id);
+    revalidatePath("/admin/products");
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to delete product" };
+  }
+}
+```
+
+**Calling Server Actions from Client Components:**
+
+```typescript
+// src/app/admin/products/create-form.tsx
+"use client";
+
+import { useActionState } from "react";
+import { createProductAction } from "./actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+export function CreateProductForm() {
+  const [state, formAction, isPending] = useActionState(createProductAction, null);
+
+  return (
+    <form action={formAction}>
+      <Input name="name" placeholder="Product name" required />
+      <Input name="price" type="number" step="0.01" placeholder="Price" required />
+
+      {state?.error && (
+        <p className="text-destructive text-sm">{state.error}</p>
+      )}
+
+      <Button type="submit" disabled={isPending}>
+        {isPending ? "Creating..." : "Create Product"}
+      </Button>
+    </form>
+  );
+}
+```
+
+```typescript
+// ✅ Calling action on button click (not form)
+"use client";
+
+import { deleteProductAction } from "./actions";
+
+export function DeleteButton({ id }: { id: number }) {
+  async function handleDelete() {
+    const result = await deleteProductAction(id);
+    if (result.error) {
+      // Handle error (show toast, etc.)
+    }
+  }
+
+  return (
+    <button onClick={handleDelete}>
+      Delete
+    </button>
+  );
+}
+```
+
+### Caching and Revalidation
+
+**Cache Invalidation Strategies:**
+
+```typescript
+// src/app/admin/products/actions.ts
+"use server";
+
+import { revalidatePath, revalidateTag } from "next/cache";
+
+export async function updateProductAction(id: number, data: any) {
+  await updateProduct(id, data);
+
+  // Option 1: Revalidate specific path
+  revalidatePath("/admin/products");           // List page
+  revalidatePath(`/admin/products/${id}`);     // Detail page
+
+  // Option 2: Revalidate by tag (more granular)
+  revalidateTag("products");                   // All product-related caches
+  revalidateTag(`product-${id}`);              // Specific product cache
+}
+```
+
+**Caching Database Queries with unstable_cache:**
+
+```typescript
+// src/data-access/products.ts
+import { unstable_cache } from "next/cache";
+import { db } from "@/db";
+import { products } from "@/db/schema";
+
+// ✅ Cache expensive queries
+export const getProducts = unstable_cache(
+  async () => {
+    return await db.query.products.findMany({
+      orderBy: desc(products.createdAt),
+      with: { category: true },
+    });
+  },
+  ["products"],                    // Cache key
+  {
+    revalidate: 60,               // Revalidate every 60 seconds
+    tags: ["products"]            // Tag for manual revalidation
+  }
+);
+
+// ✅ Cache with dynamic key
+export const getProductById = unstable_cache(
+  async (id: number) => {
+    return await db.query.products.findFirst({
+      where: eq(products.id, id),
+      with: { category: true },
+    });
+  },
+  ["product"],
+  { tags: ["products"] }
+);
+```
+
+**Fetch Caching (for external APIs):**
+
+```typescript
+// ✅ Cache external API calls
+async function getExternalData() {
+  const res = await fetch("https://api.example.com/data", {
+    cache: "force-cache",          // Cache indefinitely
+    next: { revalidate: 3600 }     // Revalidate every hour
+  });
+  return res.json();
+}
+
+// ✅ No cache for real-time data
+async function getRealTimeData() {
+  const res = await fetch("https://api.example.com/live", {
+    cache: "no-store"              // Always fetch fresh
+  });
+  return res.json();
+}
+```
+
+### Route Handlers (API Routes)
+
+When you need API endpoints (webhooks, external integrations):
+
+```typescript
+// src/app/api/products/route.ts
+import { NextResponse } from "next/server";
+import { getProducts, createProduct } from "@/data-access/products";
+import { createProductSchema } from "@/lib/validations/product";
+
+// GET /api/products
+export async function GET() {
+  try {
+    const products = await getProducts();
+    return NextResponse.json({ data: products });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to fetch products" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/products
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    const result = createProductSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error.issues[0].message },
+        { status: 400 }
+      );
+    }
+
+    const product = await createProduct(result.data);
+    return NextResponse.json({ data: product }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to create product" },
+      { status: 500 }
+    );
+  }
+}
+```
+
+```typescript
+// src/app/api/products/[id]/route.ts
+import { NextResponse } from "next/server";
+import { getProductById, updateProduct, deleteProduct } from "@/data-access/products";
+
+// GET /api/products/[id]
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const product = await getProductById(Number(id));
+
+  if (!product) {
+    return NextResponse.json(
+      { error: "Product not found" },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json({ data: product });
+}
+
+// PUT /api/products/[id]
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const body = await request.json();
+
+  try {
+    const product = await updateProduct(Number(id), body);
+    return NextResponse.json({ data: product });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to update product" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/products/[id]
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  try {
+    await deleteProduct(Number(id));
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete product" },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### Middleware and proxy.ts
+
+The `proxy.ts` file handles HTTP Basic Auth. **DO NOT MODIFY IT.**
+
+Understanding how it works:
+
+```typescript
+// src/proxy.ts (EXISTING - DO NOT MODIFY)
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+
+export function proxy(request: NextRequest) {
+  // Protects all /admin/* routes
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    const authHeader = request.headers.get("authorization");
+
+    if (!authHeader) {
+      return new NextResponse("Authentication required", {
+        status: 401,
+        headers: { "WWW-Authenticate": 'Basic realm="Admin Area"' },
+      });
+    }
+
+    // Validates Basic auth credentials from env
+    // ...
+  }
+
+  return NextResponse.next();
+}
+```
+
+**Route Protection Strategy:**
+- Place all protected routes under `/admin/*`
+- proxy.ts automatically requires HTTP Basic Auth
+- No additional auth code needed in your pages
+
+### App Router File Conventions
+
+```
+src/app/
+├── layout.tsx              # Root layout (required)
+├── page.tsx                # Home page (/)
+├── loading.tsx             # Loading UI for all routes
+├── error.tsx               # Error boundary
+├── not-found.tsx           # 404 page
+├── admin/
+│   ├── layout.tsx          # Admin layout (sidebar, nav)
+│   ├── page.tsx            # Admin home (/admin)
+│   ├── loading.tsx         # Admin loading state
+│   ├── error.tsx           # Admin error boundary
+│   ├── products/
+│   │   ├── page.tsx        # Products list (/admin/products)
+│   │   ├── loading.tsx     # Products loading
+│   │   ├── actions.ts      # Server actions
+│   │   ├── [id]/
+│   │   │   ├── page.tsx    # Product detail (/admin/products/[id])
+│   │   │   └── edit/
+│   │   │       └── page.tsx # Edit product (/admin/products/[id]/edit)
+│   │   └── new/
+│   │       └── page.tsx    # New product (/admin/products/new)
+│   └── api/                # API routes (if needed)
+│       └── webhook/
+│           └── route.ts    # POST /admin/api/webhook
+└── (landing)/              # Route group (no URL segment)
+    ├── layout.tsx          # Landing layout
+    └── page.tsx            # Public home
+```
+
+### Loading and Error States
+
+```typescript
+// src/app/admin/products/loading.tsx
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function ProductsLoading() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-10 w-48" />
+      <div className="space-y-2">
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+```typescript
+// src/app/admin/products/error.tsx
+"use client";  // Error components MUST be Client Components
+
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+
+export default function ProductsError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-12">
+      <h2 className="text-xl font-semibold">Something went wrong!</h2>
+      <p className="text-muted-foreground">{error.message}</p>
+      <Button onClick={reset}>Try again</Button>
+    </div>
+  );
+}
+```
+
+### Dynamic Routes and Params
+
+```typescript
+// src/app/admin/products/[id]/page.tsx
+import { notFound } from "next/navigation";
+import { getProductById } from "@/data-access/products";
+
+interface ProductPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { id } = await params;
+  const product = await getProductById(Number(id));
+
+  if (!product) {
+    notFound();  // Shows not-found.tsx
+  }
+
+  return (
+    <div>
+      <h1>{product.name}</h1>
+      {/* Product details */}
+    </div>
+  );
+}
+
+// Generate static params for known products (optional)
+export async function generateStaticParams() {
+  const products = await getProducts();
+  return products.map((product) => ({
+    id: String(product.id),
+  }));
+}
+```
+
+### Metadata and SEO
+
+```typescript
+// src/app/admin/products/[id]/page.tsx
+import type { Metadata } from "next";
+import { getProductById } from "@/data-access/products";
+
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+// Dynamic metadata based on product
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const product = await getProductById(Number(id));
+
+  if (!product) {
+    return { title: "Product Not Found" };
+  }
+
+  return {
+    title: product.name,
+    description: product.description,
+  };
+}
+
+export default async function ProductPage({ params }: Props) {
+  // ... page component
+}
+```
+
+---
+
 ### 4. Playwright MCP (`mcp__playwright__*`)
 
 **Use for visual component research when needed.**
@@ -685,21 +1285,52 @@ mcp__shadcn__get_audit_checklist({})
 
 ## Rules
 
+### General
 - **ASK QUESTIONS** whenever the plan is unclear or you face a decision - never assume
-- ALWAYS read the implementation plan first
-- ALWAYS install a theme from @tweakcn before building UI
-- ALWAYS use shadcn MCP to search and install components
-- ALWAYS use Context7 for Drizzle ORM patterns
-- ALWAYS check Next.js DevTools MCP for framework questions
-- ALWAYS follow existing code patterns in the boilerplate
-- ALWAYS use pnpm (NOT npm or yarn)
-- ALWAYS create proper TypeScript types
-- ALWAYS add loading states and error handling
-- NEVER modify `proxy.ts` (auth is handled there)
-- NEVER create auth or payment tables
-- NEVER skip the theme selection step
 - When choosing between multiple valid approaches, ASK the user
 - Focus on SPEED - build a functional MVP, not a perfect product
+- ALWAYS read the implementation plan first
+- ALWAYS use pnpm (NOT npm or yarn)
+- ALWAYS create proper TypeScript types
+
+### Next.js App Router (CRITICAL)
+- **Server Components by default** - only add "use client" when needed for interactivity
+- **"use client" goes at the TOP of the file** - before any imports
+- **"use server" for actions files** - all data mutations via Server Actions
+- **Server Components CAN'T use hooks** - no useState, useEffect in pages
+- **Client Components CAN'T be async** - no async function for "use client" components
+- **Pass data down** - fetch in Server Components, pass to Client Components as props
+- **revalidatePath/revalidateTag after mutations** - always invalidate cache
+- **params is a Promise in Next.js 15+** - must await params in dynamic routes
+- **error.tsx must be "use client"** - error boundaries are always client components
+- Use `mcp__next-devtools__nextjs_docs` when unsure about any Next.js pattern
+
+### File Structure
+- Place protected routes under `/admin/*` (proxy.ts handles auth)
+- Create `loading.tsx` for every major route
+- Create `error.tsx` for error boundaries
+- Keep `actions.ts` files colocated with their pages
+- One data-access file per entity in `src/data-access/`
+
+### Components & UI
+- ALWAYS install a theme from @tweakcn before building UI
+- ALWAYS use shadcn MCP to search and install components
+- Check shadcn registry FIRST, then Origin UI if needed
+- NEVER skip the theme selection step
+
+### Database
+- ALWAYS use Context7 for Drizzle ORM patterns
+- Add indexes on foreign keys and filtered columns
+- Define relations for the query builder
+- Export TypeScript types for all tables
+
+### What NOT to Do
+- NEVER modify `proxy.ts` (auth is handled there)
+- NEVER create auth or payment tables
+- NEVER use useState in Server Components
+- NEVER make Client Components async
+- NEVER forget to await params in dynamic routes
+- NEVER skip revalidation after data mutations
 
 ## Workflow Summary
 
