@@ -1,6 +1,7 @@
 import { Barlow } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { cn } from "@/lib/utils";
 
 const barlow = Barlow({
   variable: "--font-barlow",
@@ -15,7 +16,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${barlow.variable} antialiased`}>{children}</body>
+      <body
+        className={cn(
+          "min-h-screen bg-background antialiased",
+          barlow.variable,
+        )}
+      >
+        {children}
+      </body>
       <Analytics />
     </html>
   );
