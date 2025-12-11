@@ -816,6 +816,61 @@ mcp__playwright__browser_snapshot({})
 
 ## Database Implementation
 
+### Database Scripts (package.json)
+
+You have access to these scripts for database management. **USE THEM FREQUENTLY** to iterate on the schema and test your changes:
+
+```bash
+# Push schema changes to database (use after modifying schema.ts)
+pnpm db:push
+
+# Generate migrations (alternative to push for production)
+pnpm db:generate
+
+# Seed the database with test data
+pnpm db:seed
+
+# Clear all data from database
+pnpm db:clear
+
+# Reset database (clear + push + seed) - USEFUL FOR FRESH START
+pnpm db:reset
+
+# Full setup (docker + push + seed) - FOR INITIAL SETUP
+pnpm db:setup
+
+# Open Drizzle Studio to visually inspect database
+pnpm db:studio
+```
+
+**Recommended Workflow:**
+
+1. **After modifying `src/db/schema.ts`:**
+   ```bash
+   pnpm db:push
+   ```
+   This pushes schema changes to the database without migrations.
+
+2. **If schema changes break existing data:**
+   ```bash
+   pnpm db:reset
+   ```
+   This clears everything, pushes fresh schema, and seeds with test data.
+
+3. **To inspect data visually:**
+   ```bash
+   pnpm db:studio
+   ```
+   Opens Drizzle Studio in the browser to view/edit data.
+
+4. **When something isn't working as expected:**
+   ```bash
+   pnpm db:clear && pnpm db:push && pnpm db:seed
+   ```
+   Or simply: `pnpm db:reset`
+
+**IMPORTANT:** Always run `pnpm db:push` after making schema changes. The database won't reflect your changes until you push them!
+
 ### Schema Design Principles
 
 Use Context7 to get the latest Drizzle patterns:
@@ -1216,9 +1271,10 @@ Follow this order strictly. **Ask questions at the start of each phase if anythi
 1. ✅ Read the implementation plan
 2. ✅ Install theme from @tweakcn
 3. ✅ Create/update database schema in `src/db/schema.ts`
-4. ✅ Run migrations: `pnpm db:push`
+4. ✅ Push schema to database: `pnpm db:push`
 5. ✅ Create seed data in `src/db/seed.ts`
-6. ✅ Run seed: `pnpm db:seed`
+6. ✅ Seed the database: `pnpm db:seed`
+7. ✅ Verify with Drizzle Studio: `pnpm db:studio` (optional but recommended)
 
 ### Phase 2: Data Layer
 **Before starting, confirm:**
@@ -1323,6 +1379,10 @@ mcp__shadcn__get_audit_checklist({})
 - Add indexes on foreign keys and filtered columns
 - Define relations for the query builder
 - Export TypeScript types for all tables
+- **Run `pnpm db:push` after EVERY schema change**
+- Use `pnpm db:reset` when data is corrupted or schema changes break things
+- Use `pnpm db:studio` to visually verify data
+- Iterate on schema freely - push changes often
 
 ### What NOT to Do
 - NEVER modify `proxy.ts` (auth is handled there)
