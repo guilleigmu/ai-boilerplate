@@ -1,4 +1,4 @@
-# Magnetic Backoffice
+# Boilerplate Backoffice
 
 A backoffice application built with [Next.js](https://nextjs.org) 15, React 19, and Tailwind CSS 4.
 
