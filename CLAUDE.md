@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js 15 backoffice application using TypeScript, React 19, and Tailwind CSS 4. The project uses Turbopack for development and building.
+A minimal Next.js 16 starter with TypeScript, React 19, and Tailwind CSS 4.
 
 ## Development Commands
 
-- **Development server**: `pnpm dev` (uses Turbopack)
-- **Build**: `pnpm build` (uses Turbopack)
+- **Development server**: `pnpm dev`
+- **Build**: `pnpm build`
 - **Production server**: `pnpm start`
 - **Lint**: `pnpm lint` (uses Biome)
 - **Format**: `pnpm format` (uses Biome with auto-write)
@@ -34,7 +34,9 @@ This is a Next.js 15 backoffice application using TypeScript, React 19, and Tail
 
 - `src/app/` - Next.js App Router pages and layouts
 - `src/app/globals.css` - Global styles with Tailwind and theme variables
-- Root layout includes font loading and basic HTML structure
+- `src/components/ui/` - shadcn/ui components
+- `src/lib/utils.ts` - Utility functions (cn helper)
+- `src/config.ts` - App name and company name
 
 ## Component Registries (shadcn)
 
