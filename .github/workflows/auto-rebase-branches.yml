@@ -1,0 +1,98 @@
+name: Auto-Rebase Branches onto Main
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: auto-rebase
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  rebase-branches:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Rebase all branches onto main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get all remote branches except main and HEAD
+          branches=$(git branch -r | grep -v 'origin/main' | grep -v 'origin/HEAD' | sed 's/origin\///' | xargs)
+
+          if [ -z "$branches" ]; then
+            echo "No branches to rebase"
+            exit 0
+          fi
+
+          for branch in $branches; do
+            echo "=========================================="
+            echo "Processing branch: $branch"
+            echo "=========================================="
+
+            # Checkout the branch
+            git checkout "$branch" || {
+              echo "Failed to checkout $branch, skipping..."
+              continue
+            }
+
+            # Reset to remote state
+            git reset --hard "origin/$branch"
+
+            # Attempt rebase onto main
+            if git rebase origin/main; then
+              echo "Rebase successful for $branch"
+
+              # Force push the rebased branch
+              if git push --force-with-lease origin "$branch"; then
+                echo "Successfully pushed rebased $branch"
+              else
+                echo "Failed to push $branch"
+              fi
+            else
+              echo "Rebase conflict detected for $branch"
+              git rebase --abort
+
+              # Check if PR already exists
+              existing_pr=$(gh pr list --base "$branch" --head main --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+              if [ -n "$existing_pr" ] && [ "$existing_pr" != "null" ]; then
+                echo "PR #$existing_pr already exists for main -> $branch"
+              else
+                # Create PR from main to the conflicting branch
+                gh pr create \
+                  --base "$branch" \
+                  --head main \
+                  --title "chore: sync $branch with main" \
+                  --body "## Automatic Sync Required
+
+This PR was created because \`$branch\` could not be automatically rebased onto \`main\` due to conflicts.
+
+### Next steps
+1. Review and resolve conflicts
+2. Merge this PR to sync \`$branch\` with \`main\`
+
+_Created by auto-rebase workflow_" || echo "Could not create PR (may already exist)"
+              fi
+            fi
+
+            # Return to main for next iteration
+            git checkout main
+            git reset --hard origin/main
+          done
