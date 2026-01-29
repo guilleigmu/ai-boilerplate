@@ -76,19 +76,16 @@ jobs:
                 echo "PR #$existing_pr already exists for main -> $branch"
               else
                 # Create PR from main to the conflicting branch
+                pr_body="## Automatic Sync Required"
+                pr_body="$pr_body"$'\n\n'"This PR was created because **$branch** could not be automatically rebased onto **main** due to conflicts."
+                pr_body="$pr_body"$'\n\n'"### Next steps"$'\n'"1. Review and resolve conflicts"$'\n'"2. Merge this PR to sync the branch"
+                pr_body="$pr_body"$'\n\n'"_Created by auto-rebase workflow_"
+
                 gh pr create \
                   --base "$branch" \
                   --head main \
                   --title "chore: sync $branch with main" \
-                  --body "## Automatic Sync Required
-
-This PR was created because \`$branch\` could not be automatically rebased onto \`main\` due to conflicts.
-
-### Next steps
-1. Review and resolve conflicts
-2. Merge this PR to sync \`$branch\` with \`main\`
-
-_Created by auto-rebase workflow_" || echo "Could not create PR (may already exist)"
+                  --body "$pr_body" || echo "Could not create PR (may already exist)"
               fi
             fi
 
