@@ -33,12 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={cn(
-          "min-h-screen bg-background antialiased",
-          barlow.variable,
-        )}
-      >
+      <body className={cn("min-h-screen bg-background antialiased", barlow.variable)}>
         {children}
       </body>
     </html>

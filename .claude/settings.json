@@ -16,12 +16,7 @@
       "mcp__shadcn",
       "mcp__next-devtools"
     ],
-    "deny": [
-      "Read(.env)",
-      "Write(.env)",
-      "Bash(rm -rf:*)",
-      "Bash(pnpm db:push:prod)"
-    ],
+    "deny": ["Read(.env)", "Write(.env)", "Bash(rm -rf:*)", "Bash(pnpm db:push:prod)"],
     "defaultMode": "bypassPermissions"
   },
   "enableAllProjectMcpServers": true,

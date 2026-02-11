@@ -1,12 +1,8 @@
 import { redirect } from "next/navigation";
-import { appMode } from "@/config";
+import { env } from "@/env";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  if (appMode === "comingSoon") {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  if (env.APP_MODE !== "live") {
     redirect("/");
   }
 
