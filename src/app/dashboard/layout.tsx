@@ -1,8 +1,15 @@
+import { redirect } from "next/navigation";
+import { appMode } from "@/config";
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  if (appMode === "comingSoon") {
+    redirect("/");
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
