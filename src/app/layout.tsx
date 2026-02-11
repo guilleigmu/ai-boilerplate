@@ -1,7 +1,24 @@
+import type { Metadata, Viewport } from "next";
 import { Barlow } from "next/font/google";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/next";
+import { applicationName, siteUrl } from "@/config";
 import { cn } from "@/lib/utils";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: applicationName,
+    template: `%s | ${applicationName}`,
+  },
+  icons: {
+    icon: "/icon.svg",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 const barlow = Barlow({
   variable: "--font-barlow",
@@ -24,7 +41,6 @@ export default function RootLayout({
       >
         {children}
       </body>
-      <Analytics />
     </html>
   );
 }

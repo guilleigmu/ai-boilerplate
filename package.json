@@ -8,7 +8,15 @@
     "start": "next start",
     "lint": "biome lint ./",
     "format": "biome format --write ./",
-    "check": "biome check --write ./"
+    "check": "biome check --write ./",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:clear": "tsx src/db/clear.ts",
+    "db:seed": "tsx src/db/seed.ts",
+    "db:studio": "drizzle-kit studio",
+    "db:setup": "docker-compose --env-file /dev/null up -d && pnpm db:push --force && pnpm db:seed",
+    "db:reset": "pnpm db:clear && pnpm db:push --force && pnpm db:seed",
+    "db:push:prod": "./scripts/db-push-prod.sh"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
