@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm:*)",
+      "Bash(mkdir:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(mv:*)",
+      "Bash(grep:*)",
+      "Bash(npm:*)",
+      "Bash(ls:*)",
+      "Bash(cp:*)",
+      "Write",
+      "Edit",
+      "mcp__ide__getDiagnostics",
+      "mcp__shadcn",
+      "mcp__next-devtools"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Write(.env)",
+      "Bash(rm -rf:*)",
+      "Bash(pnpm db:push:prod)"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": ["shadcn", "next-devtools"],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm format $FILE_PATH",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
