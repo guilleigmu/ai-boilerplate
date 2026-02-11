@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js 15 backoffice application using TypeScript, React 19, and Tailwind CSS 4. The project uses Turbopack for development and building.
+This is a Next.js 16 application using TypeScript, React 19, and Tailwind CSS 4. The project uses Turbopack for development and building.
 
 ## Development Commands
 
