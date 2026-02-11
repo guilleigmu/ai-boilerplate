@@ -1,60 +1,30 @@
-# Boilerplate Backoffice
+# Boilerplate
 
-A backoffice application built with [Next.js](https://nextjs.org) 15, React 19, and Tailwind CSS 4.
-
-## Tech Stack
-
-- **Framework**: Next.js 15 (App Router)
-- **Package Manager**: pnpm
-- **Linting & Formatting**: Biome
+A minimal starter built with Next.js 16, React 19, TypeScript, and Tailwind CSS 4.
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 18+
-- pnpm (`npm install -g pnpm`)
-
-### First-Time Setup
-
-1. Install dependencies:
-
 ```bash
 pnpm install
-```
-
-2. Set up the local database:
-
-```bash
-pnpm db:setup
-```
-
-### Development
-
-Run the development server:
-
-```bash
 pnpm dev
 ```
 
-Run the database studio:
+Open [http://localhost:3000](http://localhost:3000).
 
-```bash
-pnpm db:studio
-```
+## Branches
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+| Branch | Description |
+| --- | --- |
+| `main` | Bare-bones Next.js + TS + Tailwind starter |
+| `landing` | Adds a minimal landing page with waitlist form |
+| `saas` | Full SaaS boilerplate with DB, dashboard, email, auth |
 
-## Available Scripts
+## Scripts
 
-| Command        | Description                          |
-| -------------- | ------------------------------------ |
-| `pnpm dev`     | Start development server (Turbopack) |
-| `pnpm build`   | Build for production                 |
-| `pnpm start`   | Start production server              |
-| `pnpm lint`    | Run Biome linter                     |
-| `pnpm format`  | Format code with Biome               |
-
-## Code Style
-
-This project uses [Biome](https://biomejs.dev/) for linting and formatting. Run `pnpm lint` to check for issues and `pnpm format` to auto-fix formatting.
+| Command | Description |
+| --- | --- |
+| `pnpm dev` | Start development server |
+| `pnpm build` | Build for production |
+| `pnpm start` | Start production server |
+| `pnpm lint` | Run Biome linter |
+| `pnpm format` | Format code with Biome |
