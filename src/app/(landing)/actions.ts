@@ -1,11 +1,9 @@
 "use server";
 
-import { waitlistSchema } from "@/lib/validations/waitlist";
+import { type WaitlistInput, waitlistSchema } from "@/lib/validations/waitlist";
 
-export async function joinWaitlist(formData: FormData) {
-  const result = waitlistSchema.safeParse({
-    email: formData.get("email"),
-  });
+export async function joinWaitlist(data: WaitlistInput) {
+  const result = waitlistSchema.safeParse(data);
 
   if (!result.success) {
     return { success: false, error: result.error.issues[0].message };

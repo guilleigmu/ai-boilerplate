@@ -4,3 +4,4 @@ export const siteUrl = "https://example.com";
 export const siteDescription = "Describe your product here";
 
 export const protectedRoutes = ["/dashboard"];
+export const authRoutes = ["/sign-in", "/sign-up"];

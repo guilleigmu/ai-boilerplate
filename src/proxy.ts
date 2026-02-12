@@ -1,21 +1,24 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
+import { type NextRequest, NextResponse } from "next/server";
+import { authRoutes, protectedRoutes } from "@/config";
 
 export function proxy(request: NextRequest) {
-  const _ = request;
+  const sessionCookie = getSessionCookie(request);
+  const { pathname } = request.nextUrl;
+
+  // Redirect authenticated users away from auth pages
+  if (sessionCookie && authRoutes.includes(pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // Redirect unauthenticated users from protected routes
+  if (!sessionCookie && protectedRoutes.some((route) => pathname.startsWith(route))) {
+    return NextResponse.redirect(new URL("/sign-in", request.url));
+  }
+
   return NextResponse.next();
 }
 
-// Configure which routes the middleware should run on
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/dashboard/:path*", "/sign-in", "/sign-up"],
 };
