@@ -94,3 +94,17 @@ export type User = InferSelectModel<typeof user>;
 export type Session = InferSelectModel<typeof session>;
 export type Account = InferSelectModel<typeof account>;
 export type Verification = InferSelectModel<typeof verification>;
+
+// Waitlist table
+export const waitlist = pgTable("waitlist", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  email: text().notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export type WaitlistEntry = InferSelectModel<typeof waitlist>;
+export type NewWaitlistEntry = InferInsertModel<typeof waitlist>;

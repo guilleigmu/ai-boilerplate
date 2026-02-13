@@ -14,11 +14,11 @@ export const env = createEnv({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     APP_MODE: appModeSchema,
     DATABASE_URL: databaseUrlSchema,
-    BETTER_AUTH_SECRET: z.string(),
+    BETTER_AUTH_SECRET: z.string().optional(),
     // RESEND_API_KEY: z.string(),
   },
   client: {
-    NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+    NEXT_PUBLIC_APP_URL: z.url().optional().default("http://localhost:3000"),
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
