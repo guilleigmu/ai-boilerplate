@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { applicationName, siteUrl } from "@/config";
 import { cn } from "@/lib/utils";
 
@@ -23,10 +24,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const barlow = Barlow({
-  variable: "--font-barlow",
+const dmSans = DM_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 export default function RootLayout({
@@ -36,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("min-h-screen bg-background antialiased", barlow.variable)}>
+      <body className={cn("min-h-screen bg-background antialiased", dmSans.variable)}>
         <NextTopLoader color="var(--primary)" speed={400} height={4} showSpinner={false} />
         <ThemeProvider
           attribute="class"
@@ -44,7 +44,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <TooltipProvider>{children}</TooltipProvider>
           <Toaster />
         </ThemeProvider>
       </body>

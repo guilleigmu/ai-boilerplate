@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { WaitlistForm } from "@/components/forms/waitlist-form";
+import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import { Button } from "@/components/ui/button";
 import { applicationName } from "@/config";
 import { env } from "@/env";
@@ -15,9 +16,11 @@ export default async function Home() {
       </div>
       {env.APP_MODE === "comingSoon" && <WaitlistForm />}
       {env.APP_MODE === "live" && (
-        <Button asChild variant="outline">
-          <Link href="/sign-in">Sign in</Link>
-        </Button>
+        <TooltipWrapper label="Sign in">
+          <Button asChild variant="outline">
+            <Link href="/sign-in">Sign in</Link>
+          </Button>
+        </TooltipWrapper>
       )}
     </div>
   );

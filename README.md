@@ -19,6 +19,15 @@ Open [http://localhost:3000](http://localhost:3000).
 | `landing` | Adds a minimal landing page with waitlist form |
 | `saas` | Full SaaS boilerplate with DB, dashboard, email, auth |
 
+## Styling Resources
+
+| Resource | URL |
+| --- | --- |
+| shadcn/ui | https://ui.shadcn.com |
+| tweakcn Theme Editor | https://tweakcn.com/editor/theme |
+| Origin UI | https://originui.com |
+| reui | https://reui.io |
+
 ## Scripts
 
 | Command | Description |

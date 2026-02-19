@@ -44,6 +44,9 @@ Two registries are configured in `components.json`:
 
 - **@shadcn** - Default shadcn/ui components
 - **@originui** - Origin UI components (https://originui.com)
+- **@tweakcn** - Tweakcn components (https://tweakcn.com)
+
+Anytime you need to look for ui components you should use the shadcn MCP to find available components among all the registries.
 
 ### Origin UI Workaround
 

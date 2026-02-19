@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
@@ -99,7 +100,7 @@ export function SignUpForm() {
             />
             {error && <p className="text-sm text-destructive text-center">{error}</p>}
             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Creating account..." : "Sign up"}
+              {form.formState.isSubmitting ? <Spinner /> : "Sign up"}
             </Button>
           </form>
         </Form>

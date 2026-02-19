@@ -20,19 +20,5 @@
     "defaultMode": "bypassPermissions"
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["shadcn", "next-devtools"],
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "pnpm format $FILE_PATH",
-            "timeout": 10
-          }
-        ]
-      }
-    ]
-  }
+  "enabledMcpjsonServers": ["shadcn", "next-devtools"]
 }
