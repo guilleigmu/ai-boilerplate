@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow } from "next/font/google";
 import "./globals.css";
+import NextTopLoader from "nextjs-toploader";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import { applicationName, siteUrl } from "@/config";
 import { cn } from "@/lib/utils";
 
@@ -32,9 +35,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background antialiased", barlow.variable)}>
-        {children}
+        <NextTopLoader color="var(--primary)" speed={400} height={4} showSpinner={false} />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

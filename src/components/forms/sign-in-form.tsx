@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/auth-client";
 import { type SignInInput, signInSchema } from "@/lib/validations/auth";
+import { toast } from "sonner";
 
 export function SignInForm() {
   const router = useRouter();
@@ -43,6 +44,7 @@ export function SignInForm() {
       return;
     }
 
+    toast.success("Signed in successfully");
     router.push("/dashboard");
     router.refresh();
   }

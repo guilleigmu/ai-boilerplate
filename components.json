@@ -20,6 +20,7 @@
   },
   "registries": {
     "@originui": "https://coss.com/origin/r/{name}.json",
-    "@tweakcn": "https://tweakcn.com/r/themes/{name}.json"
+    "@tweakcn": "https://tweakcn.com/r/themes/{name}.json",
+    "@reui": "https://reui.io/r/{style}/{name}.json"
   }
 }
