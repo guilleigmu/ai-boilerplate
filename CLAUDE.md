@@ -43,8 +43,11 @@ A minimal Next.js 16 starter with TypeScript, React 19, and Tailwind CSS 4.
 Two registries are configured in `components.json`:
 
 - **@shadcn** - Default shadcn/ui components
-- **@originui** - Origin UI components (https://originui.com)
+- **@originui** - Origin UI components (https://coss.com/origin)
 - **@tweakcn** - Tweakcn components (https://tweakcn.com)
+- **@reui** - ReUI components (https://reui.io)
+- **@cardcn** - Cardcn components (https://cardcn.dev)
+- **@coss** - Coss components (https://coss.com)
 
 Anytime you need to look for ui components you should use the shadcn MCP to find available components among all the registries.
 
