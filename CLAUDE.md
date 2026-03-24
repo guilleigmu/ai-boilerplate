@@ -48,6 +48,7 @@ Two registries are configured in `components.json`:
 - **@reui** - ReUI components (https://reui.io)
 - **@cardcn** - Cardcn components (https://cardcn.dev)
 - **@coss** - Coss components (https://coss.com)
+- **@kibo-ui** - Kibo UI components (https://www.kibo-ui.com)
 
 Anytime you need to look for ui components you should use the shadcn MCP to find available components among all the registries.
 
