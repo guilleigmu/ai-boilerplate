@@ -40,7 +40,7 @@ export default function RootLayout({
         <NextTopLoader color="var(--primary)" speed={400} height={4} showSpinner={false} />
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
